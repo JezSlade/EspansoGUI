@@ -1,184 +1,193 @@
-# Espanso IDE
+# EspansoGUI
 
-A comprehensive GUI IDE and dashboard for creating, managing, and configuring Espanso snippets.
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](#license)
+[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-informational.svg)](#cross-platform-support)
+[![PyWebView](https://img.shields.io/badge/gui-pywebview-green.svg)](https://pywebview.flowrl.com/)
+
+> A PyWebView desktop shell that exposes Espanso's CLI, YAML, and snippet ecosystem through a modern Snippet + Variable IDE with built-in diagnostics, backups, and automation helpers.
+
+EspansoGUI discovers the active Espanso workspace, monitors the daemon, and exposes every major workflow (authoring, backups, diagnostics, packages, and the SnippetSense suggestion engine) through a single window. The backend (`EspansoAPI`) wraps Espanso's CLI, YAML parsing, watcher telemetry, and safety backups so the HTML/JS dashboard can stay fast, offline-friendly, and cross-platform.
+
+---
+
+## Table of Contents
+- [EspansoGUI](#espansogui)
+  - [Table of Contents](#table-of-contents)
+  - [Overview](#overview)
+  - [Getting Started](#getting-started)
+    - [Requirements](#requirements)
+    - [Installation](#installation)
+    - [Launch](#launch)
+  - [Features](#features)
+    - [Core Control](#core-control)
+    - [Snippet \& Variable IDE](#snippet--variable-ide)
+    - [Forms \& Regex](#forms--regex)
+    - [App-Specific Configs](#app-specific-configs)
+    - [CLI \& Utilities](#cli--utilities)
+    - [UI/UX Enhancements](#uiux-enhancements)
+  - [Cross-Platform Support](#cross-platform-support)
+  - [Usage Walkthrough](#usage-walkthrough)
+    - [Dashboard \& Diagnostics](#dashboard--diagnostics)
+    - [YAML Editor](#yaml-editor)
+    - [Snippet IDE Workflow](#snippet-ide-workflow)
+    - [Snippet Library \& Quick Insert](#snippet-library--quick-insert)
+    - [Variables \& Toolkits](#variables--toolkits)
+    - [Paths \& Storage](#paths--storage)
+    - [Packages, Logs, Backups, Match Testing](#packages-logs-backups-match-testing)
+    - [SnippetSense Panel](#snippetsense-panel)
+    - [Help / Playbook](#help--playbook)
+  - [SnippetSense](#snippetsense)
+  - [Testing \& Verification](#testing--verification)
+  - [Troubleshooting](#troubleshooting)
+  - [License](#license)
+
+---
+
+## Overview
+- **Backend-first architecture** – `EspansoAPI` exposes 30+ methods (paths, snippets, variables, packages, diagnostics) to the PyWebView JavaScript bridge.
+- **Safety-first editing** – Every modification of `base.yml` and related match files is validated, backed up, and replayed to Espanso instantly.
+- **Productivity-focused UX** – A Snippet IDE, global variable editor, forms/regex builder, and Quick Insert palette streamline both beginner and power-user workflows.
+- **Observability** – Dashboard connection steps, log streaming, doctor diagnostics, match testing, and watcher telemetry keep the daemon healthy.
+- **Automation** – SnippetSense monitors repetitive typing locally (respecting privacy) and turns accepted phrases into live Espanso snippets with a single click.
+
+---
+
+## Getting Started
+
+### Requirements
+- Python 3.10+
+- Espanso 2.3.0+ available on `PATH`
+- Node/Web runtime **not** required (PyWebView embeds the HTML/JS bundle)
+- Optional: `pynput` + `psutil` for SnippetSense (auto-installed via `requirements.txt`)
+
+### Installation
+```bash
+pip install -r requirements.txt
+```
+
+### Launch
+```bash
+python espansogui.py
+```
+
+> **Tip:** Keep the Espanso daemon running. The dashboard automatically refreshes snippets, config metadata, logs, and diagnostics every few seconds without needing to click "Refresh".
+
+---
 
 ## Features
 
-- **Visual Snippet Builder** - Create snippets with forms, variables, and all Espanso features
-- **Template Library** - Pre-built templates for common snippet types
-- **Live Testing** - Test your snippets before saving
-- **Analytics Dashboard** - View statistics and usage patterns
-- **Backup & Restore** - Complete backup system with history
-- **Import/Export** - Share snippets between machines
-- **Dark/Light Mode** - Toggle themes with persistent preference
-- **Keyboard Shortcuts** - Full keyboard navigation
+### Core Control
+- **Connection Dashboard** – Start/stop/restart Espanso, view CLI output, audit connection steps, and stream log/diagnostic snippets.
+- **Path Explorer & Storage Controls** – Detect or override config/match directories, relocate YAML/backup roots, and visualize import trees.
+- **Backups** – Timestamped backups on every save plus manual full-config archives and one-click restore.
 
-## Quick Start
+### Snippet & Variable IDE
+- **Authoring** – Trigger + replacement editor with metadata (labels, enable/disable, backend selector, delay, casing, image path) and `$|$` cursor helpers.
+- **Search & Bulk** – Advanced filtering (file, enabled state, has vars/forms, label), pagination, and multi-select enable/disable/export.
+- **Templates** – Five built-in snippet templates plus drag/drop image preview and a date/shell helper toolkit.
+- **Variables** – Modal builder for all Espanso variable types, local insertion buttons, and a read-only global variable browser.
 
-### Prerequisites
-
-- Python 3.10+
-- Espanso installed and configured
-- Edge WebView2 runtime (Windows) or a compatible WebKit/Chromium engine
-
-### Installation
-
-1. Install the Python dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-2. Launch the WebView-driven desktop shell:
-   ```bash
-   python pywebview_app.py
-   ```
-
-3. The workspace auto-detects your Espanso config, enables the watcher, and surfaces protobuf analytics/features directly from the embedded HTML (inspired by the Figma layout and the previous `espanso-ide.html` experience).
-
-You can also inspect `webview_ui/espanso_companion.html` to iterate on the hero cards, feature catalog, and snippet tiles that expose every item in `feature_set.md`.
-
-## Streamlit Companion Pro
-
-This repository also ships a Python/Streamlit experience that mirrors the requested architecture:
-
-- **Core modules** for configuration discovery, recursive YAML parsing, CLI integration, file watching, and variable metadata.
-- **Pages** for Dashboard, Snippet Library, Word Processor IDE, Package Manager, and Analytics that surface real-time watcher data, CLI responses, and inline variable tooling.
-- **Feature catalog** content, inline workflows, and success criteria are surfaced inside the Streamlit UI so the app can be validated against the original spec.
-
-### Running the Streamlit App
-
-1. Install Python dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-2. Launch the Streamlit UI:
-   ```bash
-   streamlit run streamlit_app.py
-   ```
-
-3. Connect to your local Espanso configuration and explore the Dashboard, snippet editor, and analytics panels.
-
-## How It Works
-
-The IDE uses a local HTTP server to access your Espanso configuration files without browser security restrictions. The server runs on `localhost:3850` and provides a REST API for reading and writing Espanso YAML files.
-
-## Feature Set
-
-**Espanso Editor Config & Feature List**
-
-### Directory & Path Handling
-
-* Auto-detect Espanso config directory (`~/.config/espanso`, `%APPDATA%\espanso`)
-* Custom config path override via GUI
-* Parse `ESPANSO_CONFIG_DIR`, `ESPANSO_PACKAGE_DIR`, `ESPANSO_RUNTIME_DIR`
-* Validate Espanso installation (`shutil.which`)
-* Integration with `espanso path` and `espanso start`
-
-### Configuration Management
-
-* YAML treeview for `match/` and `config/` directories
-* Imports parsing with cycle detection
-* `$CONFIG` variable resolution
-* Recursive include/import support
-
-### Match System
-
-* Trigger/replace editor with treeview
-* Word boundary toggles (`word`, `left_word`, `right_word`)
-* Case propagation (`propagate_case`, `uppercase_style`)
-* Labels and search terms
-* Per-match enable/disable, backend/delay overrides
-* Cursor position markers ($|$)
-* Markdown/HTML/rich text preview
-* Image insertion (`image_path`)
-* Nested match references (`type: match`, `params`)
-
-### Variable System
-
-* Local `vars` and global `global_vars`
-* Dependency ordering and drag-reorder
-* Injection highlighting with fallback values
-* Variable types include `str`, `date`, `random`, `choice`, `clipboard`, `echo`, `shell`, `script`, `form`, `match`, `global`
-
-### Forms
-
-* Template layout (`form` / `layout`)
-* Field types: `text`, `choice`, `list`
-* Multiline and default values
-* Choice/list values with trimming
-* Preview simulation dialog
-
-### Regex Triggers
-
-* Pattern-based match (`regex`)
-* Named groups with auto vars
-* Regex validation and substitution preview
-* Buffer size overrides
+### Forms & Regex
+- **Form Builder** – Visual designer for form fields (text, radio, checkbox, select, list) with validation.
+- **Regex Tester** – Live validation, capture-group display, and inline testing.
 
 ### App-Specific Configs
+- Config wizard with filter_exec/filter_title helpers, common templates (VS Code, Chrome, Slack, Terminal, Outlook), and list management.
 
-* `<app>.yml` creation with priority merge
-* Filter rules (`filter_exec`, `filter_title`, `filter_class`, `filter_os`)
-* Active config detection (`espanso status`)
-* Per-app overrides
+### CLI & Utilities
+- Package manager (list/install/update/uninstall), log viewer, match testing with CLI output, YAML editor with validation, manual backup/restore, and Quick Insert palette for low-friction trigger lookup.
 
-### CLI Integration
+### UI/UX Enhancements
+- Keyboard shortcuts (Ctrl/Cmd+K search, Ctrl/Cmd+S save, Ctrl/Cmd+N new snippet, Esc close modal/reset form).
+- Light/dark theme toggle with persistence, responsive layout (grids collapse under 1280px), and structured panels that avoid overlapping content.
 
-* Daemon control (start/stop/reload)
-* Status/path popups (`espanso status/path`)
-* Log viewer (`espanso log --follow`)
-* Runtime toggle commands
-* Match management (`list`, `exec`, `search`)
-* Package management (`list`, `update`, `install`, `uninstall`)
+---
 
-### Server API Endpoints
+## Cross-Platform Support
 
-- `GET /api/status` - Check Espanso installation status
-- `GET /api/snippets` - Load all snippets
-- `POST /api/snippets` - Save a new snippet
-- `DELETE /api/snippets/:filename` - Delete a snippet
-- `GET /api/config` - Load Espanso config
-- `POST /api/config` - Save Espanso config
-- `POST /api/restart` - Restart Espanso
+| Platform | GUI Runtime | Notes |
+|----------|-------------|-------|
+| Windows  | Microsoft Edge WebView2 (bundled on modern Windows) | PyWebView prefers the Edge backend; SnippetSense app filtering is Windows-only. |
+| macOS    | PyQt5 + PyQtWebEngine | Install via `pip install pyqt5 pyqtwebengine` (or `brew install pyqt@5`). |
+| Linux    | PyQt5 + PyQtWebEngine **or** GTK (`python3-gi gir1.2-webkit2-4.0`) | Install distro packages, e.g., `sudo apt install python3-pyqt5 qtwebengine5-dev`. |
 
-## Espanso Directory Locations
+If PyWebView cannot initialize a GUI backend, EspansoGUI now cycles through every supported renderer and prints platform-specific recovery steps. Running inside WSL automatically relaunches the Windows copy via `py.exe`/`python.exe`; otherwise enable WSLg or an X11 server.
 
-- **Linux**: `~/.config/espanso`
-- **macOS**: `~/Library/Application Support/espanso`
-- **Windows**: `%APPDATA%\espanso`
+---
 
-## Keyboard Shortcuts
+## Usage Walkthrough
 
-- `Ctrl+N` - New snippet
-- `Ctrl+S` - Save snippet
-- `Ctrl+F` - Search snippets
-- `Ctrl+P` - Show preview
-- `?` - Show help
+### Dashboard & Diagnostics
+1. Launch the app – the dashboard auto-loads (no manual refresh needed).
+2. Review connection steps: missing CLI, disabled daemon, or watcher issues surface here.
+3. Use **Start/Stop/Restart** buttons to control Espanso; log and doctor panels refresh on a schedule.
+
+### YAML Editor
+- Use **Save & Reload** to push edits to Espanso; validation prevents malformed YAML from landing.
+- Reload from disk at any time or inspect `.espanso_companion/editor_backups/` for timestamped snapshots.
+
+### Snippet IDE Workflow
+1. Open **Snippet IDE**.
+2. Select an existing snippet or click **New Snippet** (top-right) to clear the form.
+3. Adjust metadata (labels, backend, delay, casing, word boundaries, image path) and insert variables/`$|$` markers.
+4. Hit **Save Snippet** – the backend backs up, writes, restarts Espanso, refreshes the list, and updates the Quick Insert results.
+
+### Snippet Library & Quick Insert
+- Library view: advanced filters, pagination, and bulk enable/disable/export. Quick Insert provides a searchable palette with previews, copy-to-clipboard, and double-click-to-edit.
+
+### Variables & Toolkits
+- Global variables tab allows CRUD with type-specific controls; local variables live directly within the Snippet IDE panel.
+- Shell/date helpers test commands, preview offsets, and insert templated placeholders (`{{input}}`, `{{clipboard}}`, etc.).
+
+### Paths & Storage
+- View auto-detected paths, override config roots, relocate YAML/backups, inspect environment overrides, and render config/import trees.
+
+### Packages, Logs, Backups, Match Testing
+- **Packages** – List, refresh, update all, install/uninstall packages.
+- **Logs** – Stream CLI output with auto-scroll.
+- **Backup/Restore** – Manual snapshot and restore UI with rotation awareness.
+- **Match Testing** – Uses `espanso match exec` to show exact outputs or CLI errors in-line.
+
+### SnippetSense Panel
+- Enable/disable monitoring, adjust thresholds, maintain allow/block lists, and respond to pending suggestions via toasts or the suggestion queue.
+
+### Help / Playbook
+- The in-app **Help** tab hosts scenario cards (First-Time Setup, Build Your First Snippet, Diagnostics, Advanced Authoring) mirroring the “Playbook” summary above.
+
+---
+
+## SnippetSense
+- **Privacy-first** – No keystrokes leave the machine; only hashed phrases + counts are stored locally.
+- **Cross-platform engine** – Monitoring uses `pynput` on every OS; Windows exposes extra app whitelist/blacklist filters.
+- **Idle-aware** – Automatically pauses after 30s of inactivity and resumes monitoring when typing continues.
+- **Suggestion pipeline** – Detected phrases enqueue toast prompts inside the GUI; accepting creates a snippet (auto-loading it into the IDE for editing) and restarts Espanso.
+
+---
+
+## Testing & Verification
+Run the CLI helpers before submitting changes or tagging a release:
+
+```bash
+python verify_fixes.py      # Smoke-test CLI discovery + API wiring
+python test_gui_apis.py     # Invoke every JS-exposed API method
+python3 -m py_compile espansogui.py snippetsense_engine.py  # Syntax gate
+```
+
+Record the test output in `test-log.md` per the repository workflow.
+
+---
 
 ## Troubleshooting
+| Symptom | Fix |
+|---------|-----|
+| Dashboard stuck on “Connecting…” | Ensure Espanso CLI is installed and accessible. The UI now pings the backend; check terminal logs for CLI errors. |
+| GUI fails to open | Install the runtime from the [Cross-Platform Support](#cross-platform-support) table (Edge WebView2 on Windows, PyQt5/WebEngine on macOS/Linux). |
+| Snippets save but do not expand | Verify Espanso restarted successfully (toast + dashboard). Use **Match Testing** to inspect the trigger output and review YAML via the editor. |
+| SnippetSense errors | Confirm `pynput`/`psutil` are installed. Windows-only app filters require `psutil` and Win32 APIs. |
+| Running inside WSL | EspansoGUI relaunches via the Windows interpreter; ensure Windows Python has dependencies or run within WSLg. |
+| CLI path mismatch | Use **Paths & Explorer → Move YAML Files** to relocate/migrate directories, or clear overrides to revert to auto-detected paths. |
 
-### Server won't start
-
-Make sure Node.js is installed:
-\`\`\`bash
-node --version
-\`\`\`
-
-### Can't find Espanso directory
-
-Run this command to find your Espanso path:
-\`\`\`bash
-espanso path
-\`\`\`
-
-### Snippets not loading
-
-Make sure Espanso is installed:
-\`\`\`bash
-espanso --version
-\`\`\`
+---
 
 ## License
-
-MIT
+MIT. See [LICENSE](LICENSE) for details.

@@ -47,6 +47,16 @@ class YamlProcessor:
                     variables=raw.get("vars", []),
                     enabled=raw.get("enabled", True),
                     meta=raw.get("meta", {}),
+                    label=raw.get("label", ""),
+                    backend=raw.get("backend", ""),
+                    delay=raw.get("delay"),
+                    left_word=bool(raw.get("left_word", False)),
+                    right_word=bool(raw.get("right_word", False)),
+                    uppercase_style=raw.get("uppercase_style", ""),
+                    image_path=raw.get("image_path", ""),
+                    word=bool(raw.get("word", False)),
+                    propagate_case=bool(raw.get("propagate_case", False)),
+                    form=raw.get("form"),
                 )
             )
         return matches
@@ -63,3 +73,19 @@ class MatchDefinition:
     variables: List[Dict[str, Any]]
     enabled: bool = True
     meta: Dict[str, Any] = None
+    label: str = ""
+    backend: str = ""
+    delay: Optional[Any] = None
+    left_word: bool = False
+    right_word: bool = False
+    uppercase_style: str = ""
+    image_path: str = ""
+    word: bool = False
+    propagate_case: bool = False
+    form: Any = None
+
+"""
+CHANGELOG
+2025-11-14 Codex
+- Added support for Phase 5 snippet fields (label, backend, delay, word boundaries, uppercase style, image path) to keep match normalization aligned with Espanso's schema.
+"""

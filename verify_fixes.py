@@ -72,7 +72,7 @@ def test_connection():
     print("-" * 70)
     try:
         # Import and create API instance (but don't start GUI)
-        from pywebview_app import EspansoAPI
+        from espansogui import EspansoAPI
 
         api = EspansoAPI()
         print(f"[PASS] API instance created successfully")
@@ -107,7 +107,7 @@ def test_connection():
     print("[SUCCESS] All verification tests passed!")
     print("=" * 70)
     print("\nThe application is ready to run:")
-    print("  python pywebview_app.py")
+    print("  python espansogui.py")
     print("\nConnection to local Espanso installation is working correctly.")
     return True
 

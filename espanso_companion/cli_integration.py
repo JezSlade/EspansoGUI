@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import platform
 import shutil
 import subprocess
@@ -18,6 +19,8 @@ class EspansoCLI:
         self._runner = runner
         self.timeout = timeout
         self._espanso_exe: Optional[str] = None  # Cache for espanso executable path
+        self._config_dir: Optional[Path] = None
+        self._command_prefix: List[str] = []
 
     def _find_espanso_executable(self) -> str:
         """
@@ -30,20 +33,35 @@ class EspansoCLI:
         if self._espanso_exe:
             return self._espanso_exe
 
-        # First try to find espanso (will find .cmd on Windows)
         espanso_path = shutil.which("espanso")
 
         if not espanso_path:
             raise FileNotFoundError("espanso not found in PATH")
 
-        # On Windows, if we found a .cmd file, look for the .exe in the same directory
-        if platform.system() == "Windows" and espanso_path.lower().endswith('.cmd'):
-            exe_path = Path(espanso_path).parent / "espansod.exe"
-            if exe_path.exists():
-                self._espanso_exe = str(exe_path)
+        self._command_prefix = []
+
+        if platform.system() == "Windows":
+            lower_path = espanso_path.lower()
+            base_dir = Path(espanso_path).parent
+            if lower_path.endswith("espansod.exe"):
+                exe_candidate = base_dir / "espanso.exe"
+                if exe_candidate.exists():
+                    self._espanso_exe = str(exe_candidate)
+                    return self._espanso_exe
+                cmd_candidate = base_dir / "espanso.cmd"
+                if cmd_candidate.exists():
+                    self._command_prefix = ["cmd", "/c"]
+                    self._espanso_exe = str(cmd_candidate)
+                    return self._espanso_exe
+                raise FileNotFoundError("espanso CLI wrapper not found; run 'espanso env-path add'")
+            if lower_path.endswith(".cmd"):
+                self._command_prefix = ["cmd", "/c"]
+                self._espanso_exe = espanso_path
+                return self._espanso_exe
+            if lower_path.endswith("espanso.exe"):
+                self._espanso_exe = espanso_path
                 return self._espanso_exe
 
-        # For other platforms or if .exe not found, use what we found
         self._espanso_exe = espanso_path
         return self._espanso_exe
 
@@ -57,7 +75,12 @@ class EspansoCLI:
         try:
             # Get the actual executable path (handles Windows .cmd -> .exe resolution)
             espanso_exe = self._find_espanso_executable()
-            cmd = [espanso_exe, *args]
+            cmd = [*self._command_prefix, espanso_exe, *args]
+
+            env = None
+            if self._config_dir:
+                env = os.environ.copy()
+                env["ESPANSO_CONFIG_DIR"] = str(self._config_dir)
 
             # Run directly without shell - works cross-platform
             result = self._runner(
@@ -67,6 +90,7 @@ class EspansoCLI:
                 text=True,
                 check=False,
                 timeout=self.timeout,
+                env=env,
             )
 
             return result
@@ -141,9 +165,23 @@ class EspansoCLI:
 
         return mapping
 
+    def set_config_dir(self, config_dir: Path) -> None:
+        self._config_dir = config_dir
+
 def synthesize_conversation(commands: Iterable[Tuple[str, Sequence[str]]]) -> List[Dict[str, Any]]:
     """Utility for building CLI timeline data, useful for analytics wiring."""
     history = []
     for label, args in commands:
         history.append({"label": label, "args": args})
     return history
+
+
+"""
+CHANGELOG
+2025-11-14 Codex
+- Added --config-dir injection and setter so CLI invocations honor custom workspace roots.
+2025-11-14 Codex
+- Updated Windows resolution to prefer espanso.exe over espansod.exe to avoid UnknownArgument errors.
+2025-11-14 Codex
+- Reinstated environment-driven config overrides and wrapper support to prevent regressions on daemon-only installs.
+"""

@@ -8,7 +8,7 @@ if sys.platform == "win32":
     import os
     os.system("")
 
-from pywebview_app import EspansoAPI
+from espansogui import EspansoAPI
 
 def test_all_apis():
     """Test all API methods that the GUI calls."""
@@ -74,7 +74,7 @@ def test_all_apis():
         print("[SUCCESS] All GUI API tests passed!")
         print("=" * 70)
         print("\nThe GUI should be able to connect and display data correctly.")
-        print("Run: python pywebview_app.py")
+        print("Run: python espansogui.py")
         return True
 
     except Exception as exc:

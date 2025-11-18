@@ -113,4 +113,7 @@ CHANGELOG
 ## 16) Versioning
 - Bump this file’s version when rules change. Keep an entry in `context/decisions.md` linking the commit.
 
+## 17) Code Base Maintenance
+- Remove irrelivant md files or helper scripts after use or file them for future use outside of root and link to them in context.
+
 End of file.
